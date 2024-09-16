@@ -34,7 +34,7 @@ This behavior is not only very unsecure to themselves but also unfair for other 
 
 4. Run the script.
    ```bash
-   python3 acronScript.py
+   python3 acornscript.py
    ```
 
 ### First-Time Login
