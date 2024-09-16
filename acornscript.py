@@ -8,6 +8,8 @@ import webbrowser
 
 import requests
 import ssl
+import smtplib
+
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -45,6 +47,10 @@ COURSE_SESSION_URL = "https://acorn.utoronto.ca/sws/#/courses/{index}"
 hCaptcha_URL = "https://acorn.utoronto.ca/sws/#/captcha"
 ENROLL_STATUS = False
 RETRY_TIME = 5
+
+EMAIL = ""
+EMAIL_PASS = ""
+EMAIL_SERV = None
 
 driver: uc.Chrome = None
 chrome_options = Options()
@@ -87,7 +93,7 @@ def login(target_url: str):
     driver.get(target_url)
     print("Logging in...")
 
-    print("Entering Utroid and password...")
+    print("Entering UTORID and password...")
     input_key("username", UTORID, random.randint(1, 2))
     input_key("password", PASSWORD, random.randint(1, 2))
 
@@ -342,12 +348,16 @@ def get_course_info():
             if (not MODIFY_TUT_MODE and teachMethod == "LEC" and (TARGET_LEC_SECTION_CODES == [] or
                                                                   sectionNo in TARGET_LEC_SECTION_CODES)) or (
                     teachMethod == "TUT" and sectionNo in TARGET_TUT_SECTION_CODES):
+                message = f"{TARGET_COURSE_CODE} has {space_available} spaces left (total: {total_space}) for {display_name}"
                 if space_available != 0:
-                    print(
-                        f"{TARGET_COURSE_CODE} has {space_available} spaces left (total: {total_space}) for {display_name}")
-                    enroll_modify(sectionNo)
-                    if ENROLL_STATUS is True:
-                        return
+                    print(message)
+                    
+                    if EMAIL_SERV is None:
+                        enroll_modify(sectionNo)
+                        if ENROLL_STATUS is True:
+                            return
+                    else:
+                        EMAIL_SERV.sendmail(EMAIL, EMAIL, f'Subject: SPACE AVAILABLE FOR {TARGET_COURSE_CODE}\n\n{message}')
                 else:
                     print(f"{TARGET_COURSE_CODE} has no space left for {display_name}")
     except Exception as e:
@@ -366,6 +376,21 @@ def submit():
     if UTORID == "" or PASSWORD == "":
         messagebox.showerror("Auth Error", "Both utorid and password cannot be empty")
         return
+    
+    global EMAIL
+    global EMAIL_PASS
+    global EMAIL_SERV
+    EMAIL = fields['email'].get()
+    EMAIL_PASS = fields['email_password'].get()
+    if EMAIL != "":
+        try:
+            EMAIL_SERV = smtplib.SMTP('smtp.gmail.com', 587)
+            EMAIL_SERV.starttls()
+            EMAIL_SERV.login(EMAIL, EMAIL_PASS)
+        except Exception as e:
+            messagebox.showerror('Email Auth error', "Could not log into gmail; did you use an app password?")
+            return
+        
     if MODIFY_TUT_MODE:
         global TARGET_TUT_SECTION_CODES
         TARGET_TUT_SECTION_CODES = fields['tut'].get().split(',')
@@ -382,6 +407,7 @@ def submit():
 
     global TARGET_SECTION_CODE
     TARGET_SECTION_CODE = selected_section.get()
+
 
     # 2Captcha
     # global API_2CAPTCHA
@@ -465,6 +491,10 @@ def update_course_mode(mode):
         'utorid',
         'password_label',
         'password',
+        'email_label',
+        'email',
+        'email_password_label',
+        'email_password',
         'session_code_label',
         'course_mode_label',
         'course_mode_rads',
@@ -509,7 +539,7 @@ def update_course_mode(mode):
 if __name__ == "__main__":
     ssl._create_default_https_context = ssl._create_unverified_context
     window = Tk()
-    window.title("Acron Enrollment Helper")
+    window.title("Acorn Enrollment Helper")
 
     fields = {}
     fields['utorid_label'] = Label(window, text="Utorid:")
@@ -517,6 +547,12 @@ if __name__ == "__main__":
 
     fields['password_label'] = Label(window, text="Password:")
     fields['password'] = Entry(window, width=10, show='*')
+
+    fields['email_label'] = Label(window, text='Email (leave blank to automatically enroll)')
+    fields['email'] = EntryWithPlaceholder(window, '', width=10)
+
+    fields['email_password_label'] = Label(window, text='Password (for gmail, need to generate app password)')
+    fields['email_password'] = Entry(window, width=10, show='*')
 
     if 8 <= datetime.today().month <= 12:
         TARGET_SECTION_CODE = f'{datetime.today().year}9'
