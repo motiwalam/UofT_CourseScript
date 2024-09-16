@@ -1,5 +1,14 @@
+## Changes in fork
+This is a fork of Svision's original work. This fork allows you to disable automatic enrollment into courses (which is against UofT policy) and instead only send an email notification when space in a course is available. This is better than scraping TTB since that doesn't update in real time.
+
+When you run the script, a dialog will pop up with a number of options. If you would like to retain the original behaviour of automatically enrolling into a course when there's available space, leave the "Email" field blank. Otherwise, supply a valid gmail address and password. Note that your regular gmail password will *not work*. You need to generate an app specific password. Instructions on how to do so are [here](https://support.google.com/accounts/answer/185833?hl=en).
+
+*Note*. If you provide an email address to the script, it will *not* automatically enroll you! This *DOES NOT* necessarily mean you're not at risk of having your account suspended. Read the "About" page on Acorn carefully, and set a responsible interval in the script (i.e, don't make the script send requests every second).
+
+
+
 # UofT_CourseScript
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E0F4Y96)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E0F4Y96) (<- points to Svision's original Ko-Fi link, show them some love!)
 
 ## DISCLAIMER
 ***Using the scirpt could result your Utorid Account be blocked by admin!!!***\
